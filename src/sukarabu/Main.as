@@ -6,21 +6,20 @@
  * To change this template use File | Settings | File Templates.
  */
 package sukarabu {
-import flash.display.Bitmap;
 import flash.display.Sprite;
+import flash.display.Stage;
 import flash.display.StageAlign;
 import flash.display.StageScaleMode;
 import flash.events.Event;
 import flash.events.KeyboardEvent;
 import flash.external.ExternalInterface;
-import flash.text.TextField;
 
+[SWF(width='640', height='480')]
 public class Main extends Sprite {
-    private var textField:TextField;
     private var currentSequence:BaseSequence;
-    [Embed(source='Untitled.png', mimeType='image/png')]
-    private static const TestImage:Class;
-    private var titleImage:Bitmap;
+    private var inputCueue:Array/* of KeyboardEvent */ = new Array();
+    public static const TITLE:int = 0;
+    public static const START:int = 1;
 
     public function Main() {
         addEventListener(Event.ADDED_TO_STAGE, init);
@@ -31,49 +30,47 @@ public class Main extends Sprite {
         // 画面設定
         stage.scaleMode = StageScaleMode.NO_SCALE;
         stage.align = StageAlign.TOP_LEFT;
-
-        // 黒く塗る
-        graphics.beginFill(0x0);
-        graphics.drawRect(0, 0, stage.stageWidth, stage.stageHeight);
-        graphics.endFill();
-
-        // 文字を表示するエリアを画面に割り当てる
-        textField = new TextField();
-        textField.text = 'Hit any key.';
-        textField.textColor = 0xffffff;
-        textField.x = stage.width / 2 - textField.width / 2;
-        textField.y = stage.height - 50;
-        addChild(textField);
-
-        // 画像のロード
-        titleImage = new TestImage();
-        titleImage.x = (stage.stageWidth - titleImage.width) / 2;
-        titleImage.y = 30;
-        addChild(titleImage);
-
-        // シーケンス初期化
-        currentSequence = new TitleSequence();
+        clearScreen();
 
         // 入力イベント初期化
         addEventListener(Event.ENTER_FRAME, onEnterFrame);
         stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
         stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
+
+        // シーケンス初期化
+        currentSequence = new TitleSequence(this);
+        currentSequence.start();
+    }
+
+    // 黒く塗る
+    private function clearScreen():void {
+        graphics.beginFill(0x0);
+        graphics.drawRect(0, 0, stage.stageWidth, stage.stageHeight);
+        graphics.endFill();
+    }
+
+    // getter
+    public function getStage():Stage {
+        return stage;
     }
 
     // メインループ
     private function onEnterFrame(event:Event):void {
         var ret:int = currentSequence.update();
-        currentSequence = dispatch(ret)
+        dispatch(ret)
     }
 
-    private function dispatch(i:int):BaseSequence {
-        // とりあえずなにもしない
-        return currentSequence;
+    private function dispatch(ret:int):void {
+        if (ret == START) {
+            clearScreen();
+            currentSequence = new TitleSequence(this);
+            currentSequence.start();
+        }
     }
 
     // キー入力(1)
     private function onKeyUp(event:KeyboardEvent):void {
-
+        inputCueue.push(event.clone());
     }
 
     // キー入力(2)
@@ -81,7 +78,18 @@ public class Main extends Sprite {
 
     }
 
-    private function log(message:String):void {
+    // 押されたキーを一つだけとってバッファをクリアする
+    public function getKey():KeyboardEvent {
+        var keyEvent:KeyboardEvent = inputCueue.shift();
+        inputCueue = [];
+        return keyEvent;
+    }
+
+    public function isKeyHit():Boolean {
+        return inputCueue.length > 0
+    }
+
+    public static function log(message:String):void {
         ExternalInterface.call('console.log', message);
     }
 }

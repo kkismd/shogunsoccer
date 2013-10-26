@@ -7,7 +7,7 @@
  */
 package sukarabu {
 public interface BaseSequence {
+    function start():void
     function update():int;
 }
-
 }
