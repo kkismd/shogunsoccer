@@ -6,14 +6,16 @@
  * To change this template use File | Settings | File Templates.
  */
 package sukarabu {
+import flash.display.Bitmap;
 import flash.display.Stage;
 import flash.events.KeyboardEvent;
 import flash.text.TextField;
-import flash.display.Bitmap;
 import flash.text.TextFieldAutoSize;
 import flash.text.TextFormat;
-import flash.text.engine.Kerning;
 import flash.ui.Keyboard;
+
+import mx.effects.Tween;
+import mx.effects.easing.*;
 
 public class TitleSequence implements BaseSequence{
     private var main:Main;
@@ -24,9 +26,12 @@ public class TitleSequence implements BaseSequence{
     private var titleImage:Bitmap;
     private var counter:int = 0;
     private var countField:TextField;
-    private const LIGHT:int = 1;
-    private const DARK:int = 0;
-    private var direction:int = LIGHT;
+
+    // パート分けの区分
+    private const TITLE_PART:int = 0;
+    private const LIGHT_PART:int = 1;
+    private const DARK_PART:int = 2;
+    private var part:int = TITLE_PART;
 
     public function TitleSequence(main:Main) {
         this.main = main;
@@ -54,36 +59,39 @@ public class TitleSequence implements BaseSequence{
 
         // タイトル画像のロード
         titleImage = new TestImage();
-        titleImage.x = (stage.stageWidth - titleImage.width) / 2;
-        titleImage.y = 0 - titleImage.height;
+        var startY:int = 0 - titleImage.height;
+        var stopY:int = (stage.stageHeight + titleImage.height) / 2;
+        var startX:int = (stage.stageWidth - titleImage.width) / 2;
+        titleImage.x = startX;
+        titleImage.y = startY;
         main.addChild(titleImage);
+        var titleTween:Tween = new Tween(titleImage, startY, stopY, 5000);
+        titleTween.easingFunction = mx.effects.easing.Quadratic.easeInOut;
+        titleTween.setTweenHandlers(
+                function (val:int):void { titleImage.y = val; },
+                function (val:int):void{ part = LIGHT_PART; }
+        );
     }
 
     public function update():int {
         counter++;
         countField.text = counter.toString();
 
-        if (titlePositionOK()) {
-            titleImage.y += 2;
+        switch (part) {
+            case TITLE_PART:
+                updateTitle();
+                break;
+            case LIGHT_PART:
+                updateLight();
+                break;
+            case DARK_PART:
+                updateDark();
+                break;
         }
-        if (!titlePositionOK() && checkInterval(3)) {
-            if (direction == LIGHT) {
-                if (textField.alpha < 1) {
-                    textField.alpha += 0.1;
-                } else {
-                    direction = DARK;
-                }
-            } else {
-                if (textField.alpha > 0) {
-                    textField.alpha -= 0.1;
-                } else {
-                    direction = LIGHT;
-                }
-            }
-        }
+
         // キー入力の処理
         if (main.isKeyHit()) {
-            if (titlePositionOK()) {
+            if (part == TITLE_PART) {
                 // タイトル移動中なら、入力をクリアする
                 main.getKey();
                 return Main.TITLE;
@@ -98,16 +106,35 @@ public class TitleSequence implements BaseSequence{
         return Main.TITLE;
     }
 
+    private function updateTitle():void {
+
+    }
+
+    private function updateLight():void {
+        if (!checkInterval(3)) return;
+
+        if (textField.alpha < 1) {
+            textField.alpha += 0.1;
+        } else {
+            part = DARK_PART;
+        }
+    }
+
+    private function updateDark():void {
+        if (!checkInterval(3)) return;
+
+        if (textField.alpha > 0) {
+            textField.alpha -= 0.1;
+        } else {
+            part = LIGHT_PART;
+        }
+    }
+
     // 表示オブジェクトを削除する
     private function dispose():void {
         main.removeChild(titleImage);
         main.removeChild(textField);
         main.removeChild(countField);
-    }
-
-    // タイトルがまだ動いていい位置にいるか
-    private function titlePositionOK():Boolean {
-        return (stage.stageHeight / 2) > (titleImage.y + (titleImage.height / 2)) + 40;
     }
 
     private function checkInterval(interval:int):Boolean {
