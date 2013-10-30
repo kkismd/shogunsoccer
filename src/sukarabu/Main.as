@@ -17,9 +17,9 @@ import flash.external.ExternalInterface;
 [SWF(width='640', height='480')]
 public class Main extends Sprite {
     private var currentSequence:BaseSequence;
-    private var inputCueue:Array/* of KeyboardEvent */ = new Array();
+    private var keyState:Array/* of Boolean */ = new Array();
     public static const TITLE:int = 0;
-    public static const START:int = 1;
+    public static const GAME:int = 1;
 
     public function Main() {
         addEventListener(Event.ADDED_TO_STAGE, init);
@@ -36,6 +36,7 @@ public class Main extends Sprite {
         addEventListener(Event.ENTER_FRAME, onEnterFrame);
         stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
         stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
+        stage.addEventListener(Event.DEACTIVATE, onDeactivate);
 
         // シーケンス初期化
         currentSequence = new TitleSequence(this);
@@ -61,32 +62,29 @@ public class Main extends Sprite {
     }
 
     private function dispatch(ret:int):void {
-        if (ret == START) {
+        if (ret == GAME) {
             clearScreen();
-            currentSequence = new TitleSequence(this);
+            currentSequence = new GameSequence(this);
             currentSequence.start();
         }
     }
 
     // キー入力(1)
     private function onKeyUp(event:KeyboardEvent):void {
-        inputCueue.push(event.clone());
+        keyState[event.keyCode] = true;
     }
 
     // キー入力(2)
     private function onKeyDown(event:KeyboardEvent):void {
-
+        keyState[event.keyCode] = false;
     }
 
-    // 押されたキーを一つだけとってバッファをクリアする
-    public function getKey():KeyboardEvent {
-        var keyEvent:KeyboardEvent = inputCueue.shift();
-        inputCueue = [];
-        return keyEvent;
+    private function onDeactivate(event:Event):void {
+        keyState = new Array();
     }
 
-    public function isKeyHit():Boolean {
-        return inputCueue.length > 0
+    public function isKeyPress(keyCode:uint):Boolean {
+        return keyState[keyCode];
     }
 
     public static function log(message:String):void {

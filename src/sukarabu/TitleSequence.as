@@ -39,7 +39,6 @@ public class TitleSequence implements BaseSequence{
     }
 
     public function start():void {
-
         // 文字を表示するエリアを画面に割り当てる
         textField = new TextField();
         textField.defaultTextFormat = new TextFormat('', 20, 0xffffff, true);
@@ -60,7 +59,7 @@ public class TitleSequence implements BaseSequence{
         // タイトル画像のロード
         titleImage = new TestImage();
         var startY:int = 0 - titleImage.height;
-        var stopY:int = (stage.stageHeight + titleImage.height) / 2;
+        var stopY:int = (stage.stageHeight - titleImage.height) / 3;
         var startX:int = (stage.stageWidth - titleImage.width) / 2;
         titleImage.x = startX;
         titleImage.y = startY;
@@ -90,18 +89,9 @@ public class TitleSequence implements BaseSequence{
         }
 
         // キー入力の処理
-        if (main.isKeyHit()) {
-            if (part == TITLE_PART) {
-                // タイトル移動中なら、入力をクリアする
-                main.getKey();
-                return Main.TITLE;
-            }
-            var keyEvent:KeyboardEvent = main.getKey();
-            Main.log(keyEvent.keyCode.toString());
-            if (keyEvent.keyCode == Keyboard.SPACE) {
-                dispose();
-                return Main.START;
-            }
+        if (part != TITLE_PART && main.isKeyPress(Keyboard.SPACE)) {
+            dispose();
+            return Main.GAME;
         }
         return Main.TITLE;
     }
