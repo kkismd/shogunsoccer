@@ -17,6 +17,8 @@ public class GameSequence implements BaseSequence {
     private var tokin:Bitmap;
     private var main:Main;
     private var stage:Stage;
+    // 一回の移動量
+    private const DELTA:int = 4;
 
     public function GameSequence(main:Main) {
         this.main = main;
@@ -32,14 +34,14 @@ public class GameSequence implements BaseSequence {
     }
 
     public function update():int {
-        if (main.isKeyPress(Keyboard.UP)) {
-            tokin.y--;
-        } else if (main.isKeyPress(Keyboard.DOWN)) {
-            tokin.y++;
-        } else if (main.isKeyPress(Keyboard.LEFT)) {
-            tokin.x--;
-        } else if (main.isKeyPress(Keyboard.RIGHT)) {
-            tokin.x++;
+        if (main.isKeyPress(Keyboard.UP) &&tokin.y > 0) {
+            tokin.y -= DELTA;
+        } else if (main.isKeyPress(Keyboard.DOWN) && tokin.y + tokin.height < stage.stageHeight) {
+            tokin.y += DELTA;
+        } else if (main.isKeyPress(Keyboard.LEFT) && tokin.x > 0) {
+            tokin.x -= DELTA;
+        } else if (main.isKeyPress(Keyboard.RIGHT) && tokin.x + tokin.width < stage.stageWidth) {
+            tokin.x += DELTA;
         }
         return 0;
     }

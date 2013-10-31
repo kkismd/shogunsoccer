@@ -93,7 +93,7 @@ public class TitleSequence implements BaseSequence{
             dispose();
             return Main.GAME;
         }
-        return Main.TITLE;
+        return Main.STAY;
     }
 
     private function updateTitle():void {

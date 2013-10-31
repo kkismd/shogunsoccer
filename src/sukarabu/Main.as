@@ -18,7 +18,7 @@ import flash.external.ExternalInterface;
 public class Main extends Sprite {
     private var currentSequence:BaseSequence;
     private var keyState:Array/* of Boolean */ = new Array();
-    public static const TITLE:int = 0;
+    public static const STAY:int = 0;
     public static const GAME:int = 1;
 
     public function Main() {
@@ -71,12 +71,12 @@ public class Main extends Sprite {
 
     // キー入力(1)
     private function onKeyUp(event:KeyboardEvent):void {
-        keyState[event.keyCode] = true;
+        keyState[event.keyCode] = false;
     }
 
     // キー入力(2)
     private function onKeyDown(event:KeyboardEvent):void {
-        keyState[event.keyCode] = false;
+        keyState[event.keyCode] = true;
     }
 
     private function onDeactivate(event:Event):void {
