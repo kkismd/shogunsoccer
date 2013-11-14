@@ -52,9 +52,6 @@ class Main extends Sprite {
     private function onEnterFrame(event:Event):Void {
         frameCount++;
         if (frameCount >= MAXCOUNT) { frameCount = 0; }
-        if (frameCount % 10 != 0) {
-            return;
-        }
 
         var nextSequence = currentSequence.update();
         switch nextSequence {
