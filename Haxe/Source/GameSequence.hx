@@ -1,5 +1,9 @@
 package;
 
+import flash.geom.Point;
+import flash.text.TextFieldAutoSize;
+import flash.text.TextField;
+import flash.text.TextFormat;
 import flash.display.Sprite;
 import openfl.Assets;
 import flash.display.Bitmap;
@@ -22,10 +26,11 @@ class GameSequence implements BaseSequence {
     private var board:Bitmap;
     private var ballBase:Sprite;
     private var ball:Bitmap;
-    private var delta:Float;
     private var direction:Direction;
     private var ballMoveX = 3.0;
     private var ballMoveY = 4.0;
+    private var tf:TextField;
+    private var myPos:Point;
 
     public function new(main:Main, stage:Stage) {
         this.main = main;
@@ -35,6 +40,7 @@ class GameSequence implements BaseSequence {
     // 初期化
     public function start():Void {
         direction = Direction.Stop;
+        myPos = new Point(0, 0);
 
         board = loadBitmap('assets/japanese-chess-bds.jpg');
         board.x = 50;
@@ -56,18 +62,26 @@ class GameSequence implements BaseSequence {
         tokin = loadBitmap('assets/sgs18.png');
         tokin.x = (stage.stageWidth - tokin.width) / 2;
         tokin.y = (stage.stageHeight - tokin.height) / 2;
+        tokin.scaleX = 1.5;
+        tokin.scaleY = 1.5;
         main.addChild(tokin);
 
-        delta = tokin.height / 4;
+        tf = new TextField();
+        tf.defaultTextFormat = new TextFormat('', 14, 0xffffff, true);
+        tf.autoSize = TextFieldAutoSize.LEFT;
+        tf.x = 50;
+        tf.y = stage.stageHeight - 50;
+        main.addChild(tf);
     }
 
     // メインループ
     public function update():SequenceKind {
-        if (main.count() % 4 == 0) {
-            inputDirection();
-        }
         ballBase.rotation += 2;
         moveBall();
+        inputDirection();
+        if (main.count() % 4 == 0) {
+            moveTokin();
+        }
 
         // キーボードの Q で終了
         if (main.isKeyPress(Keyboard.Q)) {
@@ -75,16 +89,24 @@ class GameSequence implements BaseSequence {
             return SequenceKind.Title;
         }
 
-        if (direction == Direction.Up &&tokin.y > 0) {
-            tokin.y -= delta;
-        } else if (direction == Direction.Down && tokin.y + tokin.height < stage.stageHeight) {
-            tokin.y += delta;
-        } else if (direction == Direction.Left && tokin.x > 0) {
-            tokin.x -= delta;
-        } else if (direction == Direction.Right && tokin.x + tokin.width < stage.stageWidth) {
-            tokin.x += delta;
-        }
         return SequenceKind.Stay;
+    }
+
+    private function moveTokin():Void {
+        if (direction == Direction.Up &&myPos.y > 0) {
+            myPos.y -= 1;
+        } else if (direction == Direction.Down && myPos.y < 8) {
+            myPos.y += 1;
+        } else if (direction == Direction.Left && myPos.x > 0) {
+            myPos.x -= 1;
+        } else if (direction == Direction.Right && myPos.x < 8) {
+            myPos.x += 1;
+        }
+        var newPos = getUnitPos(myPos);
+        tokin.x = newPos.x;
+        tokin.y = newPos.y;
+
+        tf.text = 'tokin.x: ${tokin.x}  tokin.y: ${tokin.y} ';
     }
 
     private function moveBall():Void {
@@ -151,5 +173,11 @@ class GameSequence implements BaseSequence {
 
     private function loadBitmap(path:String):Bitmap {
         return new Bitmap(Assets.getBitmapData(path));
+    }
+
+    private function getUnitPos(pos:Point):Point {
+        var posX = (pos.x * 30 + 15) * 1.5 + board.x;
+        var posY = (pos.y * 32 + 15) * 1.5 + board.y;
+        return new Point(posX, posY);
     }
 }
