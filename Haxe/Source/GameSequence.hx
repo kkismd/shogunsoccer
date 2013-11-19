@@ -1,9 +1,7 @@
 package;
 
+import motion.Actuate;
 import flash.geom.Point;
-import flash.text.TextFieldAutoSize;
-import flash.text.TextField;
-import flash.text.TextFormat;
 import flash.display.Sprite;
 import openfl.Assets;
 import flash.display.Bitmap;
@@ -11,12 +9,19 @@ import BaseSequence.SequenceKind;
 import flash.display.Stage;
 import flash.ui.Keyboard;
 
+// 移動キー入力の方向
 enum Direction {
     Stop;
     Up;
     Down;
     Left;
     Right;
+}
+
+// マップに置かれているオブジェクトの種類
+enum GameMap {
+    None;
+    Player(id : String);
 }
 
 class GameSequence implements BaseSequence {
@@ -29,8 +34,8 @@ class GameSequence implements BaseSequence {
     private var direction:Direction;
     private var ballMoveX = 3.0;
     private var ballMoveY = 4.0;
-    private var tf:TextField;
     private var myPos:Point;
+    private var map:Array<GameMap>;
 
     public function new(main:Main, stage:Stage) {
         this.main = main;
@@ -39,8 +44,23 @@ class GameSequence implements BaseSequence {
 
     // 初期化
     public function start():Void {
+        initMyUnit();
+        initBoard();
+        initBall();
+        initUnit();
+    }
+
+    private function initMyUnit():Void {
         direction = Direction.Stop;
         myPos = new Point(0, 0);
+    }
+
+    private function initBoard():Void {
+        map = new Array<GameMap>();
+        for (i in 0...81) {
+            map.push(GameMap.None);
+        }
+        map[0] = GameMap.Player('me');
 
         board = loadBitmap('assets/japanese-chess-bds.jpg');
         board.x = 50;
@@ -48,7 +68,9 @@ class GameSequence implements BaseSequence {
         board.scaleX = 1.5;
         board.scaleY = 1.5;
         main.addChild(board);
+    }
 
+    private function initBall():Void {
         ballBase = new Sprite();
         ballBase.x = 60;
         ballBase.y = 50;
@@ -58,20 +80,15 @@ class GameSequence implements BaseSequence {
         ball.x = 0 - ball.width / 2;
         ball.y = 0 - ball.height / 2;
         ballBase.addChild(ball);
+    }
 
+    private function initUnit():Void {
         tokin = loadBitmap('assets/sgs18.png');
         tokin.x = (stage.stageWidth - tokin.width) / 2;
         tokin.y = (stage.stageHeight - tokin.height) / 2;
         tokin.scaleX = 1.5;
         tokin.scaleY = 1.5;
         main.addChild(tokin);
-
-        tf = new TextField();
-        tf.defaultTextFormat = new TextFormat('', 14, 0xffffff, true);
-        tf.autoSize = TextFieldAutoSize.LEFT;
-        tf.x = 50;
-        tf.y = stage.stageHeight - 50;
-        main.addChild(tf);
     }
 
     // メインループ
@@ -93,6 +110,8 @@ class GameSequence implements BaseSequence {
     }
 
     private function moveTokin():Void {
+        var oldPos:Point = myPos;
+
         if (direction == Direction.Up &&myPos.y > 0) {
             myPos.y -= 1;
         } else if (direction == Direction.Down && myPos.y < 8) {
@@ -102,11 +121,17 @@ class GameSequence implements BaseSequence {
         } else if (direction == Direction.Right && myPos.x < 8) {
             myPos.x += 1;
         }
-        var newPos = getUnitPos(myPos);
-        tokin.x = newPos.x;
-        tokin.y = newPos.y;
+        // 移動していたらマップを書き換える
+        if (myPos != oldPos) {
+            map[pointToMapAddress(oldPos)] = GameMap.None;
+            map[pointToMapAddress(myPos)] = GameMap.Player("me");
+        }
+        animateTokin(myPos);
+    }
 
-        tf.text = 'tokin.x: ${tokin.x}  tokin.y: ${tokin.y} ';
+    private function animateTokin(pos:Point):Void {
+        var newPos = getUnitPos(myPos);
+        Actuate.tween(tokin, 1, {x: newPos.x, y: newPos.y});
     }
 
     private function moveBall():Void {
@@ -179,5 +204,9 @@ class GameSequence implements BaseSequence {
         var posX = (pos.x * 30 + 15) * 1.5 + board.x;
         var posY = (pos.y * 32 + 15) * 1.5 + board.y;
         return new Point(posX, posY);
+    }
+
+    private function pointToMapAddress(point:Point):Int {
+        return Std.int(point.x + point.y * 9);
     }
 }
