@@ -19,7 +19,7 @@ enum Direction {
 }
 
 // マップに置かれているオブジェクトの種類
-enum GameMap {
+enum MapObject {
     None;
     Player(id : String);
 }
@@ -35,7 +35,7 @@ class GameSequence implements BaseSequence {
     private var ballMoveX = 3.0;
     private var ballMoveY = 4.0;
     private var myPos:Point;
-    private var map:Array<GameMap>;
+    private var map:Array<MapObject>;
 
     public function new(main:Main, stage:Stage) {
         this.main = main;
@@ -56,11 +56,11 @@ class GameSequence implements BaseSequence {
     }
 
     private function initBoard():Void {
-        map = new Array<GameMap>();
+        map = new Array<MapObject>();
         for (i in 0...81) {
-            map.push(GameMap.None);
+            map.push(MapObject.None);
         }
-        map[0] = GameMap.Player('me');
+        map[0] = MapObject.Player('me');
 
         board = loadBitmap('assets/japanese-chess-bds.jpg');
         board.x = 50;
@@ -123,8 +123,8 @@ class GameSequence implements BaseSequence {
         }
         // 移動していたらマップを書き換える
         if (myPos != oldPos) {
-            map[pointToMapAddress(oldPos)] = GameMap.None;
-            map[pointToMapAddress(myPos)] = GameMap.Player("me");
+            map[pointToMapAddress(oldPos)] = MapObject.None;
+            map[pointToMapAddress(myPos)] = MapObject.Player("me");
         }
         animateTokin(myPos);
     }
