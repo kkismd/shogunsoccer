@@ -1,7 +1,7 @@
 package;
 
-import flash.geom.Point;
 import GameSequence.MapObject;
+
 class GameMap {
     private var map:Array<MapObject>;
 
@@ -32,11 +32,13 @@ class GameMap {
     }
 }
 
+// 9x9の論理座標系
 typedef LogicalCoordinate = {
     x: Int,
     y: Int,
 }
 
+// 物理座標系
 typedef GraphicalCoordinate = {
     x: Float,
     y: Float,

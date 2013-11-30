@@ -32,13 +32,9 @@ class GameSequence implements BaseSequence
     private var stage:Stage;
     private var tokin:Bitmap;
     private var board:Bitmap;
-    private var ballBase:Sprite;
-    private var ball:Bitmap;
-    private var direction:Direction;
-    private var ballMoveX = 3.0;
-    private var ballMoveY = 4.0;
     private var myPos:LogicalCoordinate;
     private var map:GameMap;
+    private var view:GameView;
 
     public function new(main:Main, stage:Stage)
     {
@@ -51,7 +47,6 @@ class GameSequence implements BaseSequence
     {
         initMyUnit();
         initBoard();
-        initBall();
         initUnit();
     }
 
@@ -68,25 +63,8 @@ class GameSequence implements BaseSequence
         var pos:LogicalCoordinate = {x: 0, y: 0};
         map.put(me, pos);
 
-        board = loadBitmap('assets/japanese-chess-bds.jpg');
-        board.x = 50;
-        board.y = 50;
-        board.scaleX = 1.5;
-        board.scaleY = 1.5;
-        main.addChild(board);
-    }
-
-    private function initBall():Void
-    {
-        ballBase = new Sprite();
-        ballBase.x = 60;
-        ballBase.y = 50;
-        main.addChild(ballBase);
-
-        ball = loadBitmap('assets/ball.png');
-        ball.x = 0 - ball.width / 2;
-        ball.y = 0 - ball.height / 2;
-        ballBase.addChild(ball);
+        view = new GameView(main);
+        view.init();
     }
 
     private function initUnit():Void
@@ -102,8 +80,7 @@ class GameSequence implements BaseSequence
     // メインループ
     public function update():SequenceKind
     {
-        ballBase.rotation += 2;
-        moveBall();
+        view.moveBall();
         inputDirection();
         if (main.count() % 4 == 0)
         {
@@ -152,57 +129,6 @@ class GameSequence implements BaseSequence
     {
         var newPos = getUnitPos(myPos);
         Actuate.tween(tokin, 1, {x: newPos.x, y: newPos.y});
-    }
-
-    private function moveBall():Void
-    {
-        // ボールが右向きではみ出していないなら
-        if (ballMoveX > 0 && ballBase.x < board.x + board.width - ball.width / 2)
-        {
-            // 右に動く
-            ballBase.x += ballMoveX;
-        }
-        // ボールが右向きではみだしているなら
-        else if (ballMoveX > 0 && ballBase.x >= board.x + board.width - ball.width/ 2)
-        {
-            // 反転させる
-            ballMoveX = -ballMoveX;
-        }
-        // ボールが左向きではみ出していない
-        else if (ballMoveX < 0 && ballBase.x - ball.width / 2 > board.x)
-        {
-            // 左に動く
-            ballBase.x += ballMoveX;
-        }
-        // ボールが左向きではみ出している
-        else if (ballMoveX < 0 && ballBase.x - ball.width / 2 <= board.x)
-        {
-            // 反転させる
-            ballMoveX = -ballMoveX;
-        }
-
-        // ボールが下向きではみだしていない
-        if (ballMoveY > 0 && ballBase.y < board.y + board.height - ball.height / 2)
-        {
-            // 下に動く
-            ballBase.y += ballMoveY;
-        }
-        // 下向きではみ出している
-        else if (ballMoveY > 0 && ballBase.y >= board.y + board.height - ball.height / 2)
-        {
-            ballMoveY = -ballMoveY;
-        }
-        // 上向きではみ出していない
-        else if (ballMoveY < 0 && ballBase.y - ball.height / 2 > board.y)
-        {
-            ballBase.y += ballMoveY;
-        }
-        // 上向きではみ出している
-        else if (ballMoveY < 0 && ballBase.y - ball.height / 2 <= board.y)
-        {
-            // 反転させる
-            ballMoveY = -ballMoveY;
-        }
     }
 
     function inputDirection():Void
