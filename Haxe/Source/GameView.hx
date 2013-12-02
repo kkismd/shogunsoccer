@@ -1,29 +1,71 @@
 package;
-import GameSequence.Direction;
-import flash.display.Sprite;
+import flash.display.Stage;
+import GameMap.GraphicalCoordinate;
 import openfl.Assets;
 import flash.display.Bitmap;
+import flash.display.Sprite;
+import motion.Actuate;
 
-class GameView
+interface IObserver
+{
+    function update():Void;
+}
+
+class GameView implements IObserver
 {
     private var main:Main;
+    private var gameMap:GameMap;
     private var board:Bitmap;
     private var ballBase:Sprite;
     private var ball:Bitmap;
-    private var direction:Direction;
     private var ballMoveX = 3.0;
     private var ballMoveY = 4.0;
+    private var tokin:Bitmap;
 
-    public function new(main:Main)
+    public function new(main:Main, gameMap:GameMap)
     {
         this.main = main;
+        this.gameMap = gameMap;
     }
 
-    public function init():Bitmap
+    public function init(stage:Stage):Void
     {
         initBoard();
         initBall();
+        initUnit(stage);
+        gameMap.attatch(this);
     }
+
+    public function clearObject():Void
+    {
+        main.removeChild(ballBase);
+        main.removeChild(tokin);
+    }
+
+    public function boardOffset():GraphicalCoordinate
+    {
+        return { x: board.x, y: board.y };
+    }
+
+    public function update():Void
+    {
+        var pos:LogicalCoordinate = gameMap.find("me");
+        animateTokin(pos);
+    }
+
+    private function animateTokin(pos:LogicalCoordinate):Void
+    {
+        var newPos = getUnitPos(pos);
+        Actuate.tween(tokin, 1, {x: newPos.x, y: newPos.y});
+    }
+
+    private function getUnitPos(pos:LogicalCoordinate):GraphicalCoordinate
+    {
+        var posX = (pos.x * 30 + 15) * 1.5 + board.x;
+        var posY = (pos.y * 32 + 15) * 1.5 + board.y;
+        return {x: posX, y: posY};
+    }
+
 
     private function initBoard():Void
     {
@@ -48,6 +90,16 @@ class GameView
         ballBase.addChild(ball);
     }
 
+    private function initUnit(stage:Stage):Void
+    {
+        tokin = loadBitmap('assets/sgs18.png');
+        tokin.x = (stage.stageWidth - tokin.width) / 2;
+        tokin.y = (stage.stageHeight - tokin.height) / 2;
+        tokin.scaleX = 1.5;
+        tokin.scaleY = 1.5;
+        main.addChild(tokin);
+    }
+
     private function loadBitmap(path:String):Bitmap
     {
         return new Bitmap(Assets.getBitmapData(path));
@@ -60,7 +112,7 @@ class GameView
 
     private function left_bound():Float
     {
-        return ballBase.x - ball.width / 2;
+        return board.x + ball.width / 2;
     }
 
     private function bottom_bound():Float
@@ -70,7 +122,7 @@ class GameView
 
     private function top_bound():Float
     {
-        return ballBase.y - ball.height / 2;
+        return board.y + ball.height / 2;
     }
 
     public function moveBall():Void
@@ -88,7 +140,7 @@ class GameView
         }
         else
         {
-            if (left_bound() > board.x)
+            if (ballBase.x > left_bound())
                 ballBase.x += ballMoveX; // はみ出していないなら左に動く
             else
                 ballMoveX = -ballMoveX; // ボールが左向きではみ出しているなら反転させる
@@ -104,7 +156,7 @@ class GameView
         }
         else
         {
-            if (top_bound() > board.y)
+            if (ballBase.y > top_bound())
                 ballBase.y += ballMoveY; // 上向きではみ出していない 上に動く
             else
                 ballMoveY = -ballMoveY; // 上向きではみ出している 反転させる

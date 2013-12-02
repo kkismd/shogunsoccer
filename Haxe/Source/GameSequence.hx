@@ -5,9 +5,7 @@ import GameMap.LogicalCoordinate;
 import GameMap.GraphicalCoordinate;
 import flash.display.Bitmap;
 import flash.display.Stage;
-import flash.display.Sprite;
 import flash.ui.Keyboard;
-import motion.Actuate;
 import openfl.Assets;
 
 // 移動キー入力の方向
@@ -30,8 +28,7 @@ class GameSequence implements BaseSequence
 {
     private var main:Main;
     private var stage:Stage;
-    private var tokin:Bitmap;
-    private var board:Bitmap;
+    private var direction:Direction;
     private var myPos:LogicalCoordinate;
     private var map:GameMap;
     private var view:GameView;
@@ -47,7 +44,6 @@ class GameSequence implements BaseSequence
     {
         initMyUnit();
         initBoard();
-        initUnit();
     }
 
     private function initMyUnit():Void
@@ -64,17 +60,7 @@ class GameSequence implements BaseSequence
         map.put(me, pos);
 
         view = new GameView(main);
-        view.init();
-    }
-
-    private function initUnit():Void
-    {
-        tokin = loadBitmap('assets/sgs18.png');
-        tokin.x = (stage.stageWidth - tokin.width) / 2;
-        tokin.y = (stage.stageHeight - tokin.height) / 2;
-        tokin.scaleX = 1.5;
-        tokin.scaleY = 1.5;
-        main.addChild(tokin);
+        view.init(stage);
     }
 
     // メインループ
@@ -90,7 +76,7 @@ class GameSequence implements BaseSequence
         // キーボードの Q で終了
         if (main.isKeyPress(Keyboard.Q))
         {
-            clearObjects();
+            view.clearObject();
             return SequenceKind.Title;
         }
 
@@ -122,13 +108,6 @@ class GameSequence implements BaseSequence
             map.put(MapObject.None, oldPos);
             map.put(MapObject.Player("me"), myPos);
         }
-        animateTokin(myPos);
-    }
-
-    private function animateTokin(pos:LogicalCoordinate):Void
-    {
-        var newPos = getUnitPos(myPos);
-        Actuate.tween(tokin, 1, {x: newPos.x, y: newPos.y});
     }
 
     function inputDirection():Void
@@ -155,22 +134,8 @@ class GameSequence implements BaseSequence
         }
     }
 
-    private function clearObjects():Void
-    {
-        main.removeChild(tokin);
-        main.removeChild(board);
-        main.removeChild(ballBase);
-    }
-
     private function loadBitmap(path:String):Bitmap
     {
         return new Bitmap(Assets.getBitmapData(path));
-    }
-
-    private function getUnitPos(pos:LogicalCoordinate):GraphicalCoordinate
-    {
-        var posX = (pos.x * 30 + 15) * 1.5 + board.x;
-        var posY = (pos.y * 32 + 15) * 1.5 + board.y;
-        return {x: posX, y: posY};
     }
 }
